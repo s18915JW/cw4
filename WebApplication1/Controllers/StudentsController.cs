@@ -2,71 +2,48 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using WebApplication1.DAL;
 using WebApplication1.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Data.SqlClient;
 
 namespace WebApplication1.Controllers
-{  
+{
     [ApiController]
     [Route("api/students")]
     public class StudentsController : ControllerBase
     {
-        private readonly IDbService dbService;
-
-        public StudentsController(IDbService service)
-        {
-            dbService = service;
-        }
-
-        [HttpGet("mock")]
-        public IActionResult GetStudentsMock()
-        {
-            return Ok(dbService.GetStudents());
-        }
+        private const string ConString = "Data Source=db-mssql;Initial Catalog=s18915;Integrated Security=True";
 
         [HttpGet]
-        public string GetStudents()
+        public IActionResult GetStudents()
         {
-            return "Jankowski, Maciejewski, Andrzejewski";
-        }
+            var list = new List<Student>();
 
-        [HttpGet("{id}")]
-        public IActionResult GetStudent(int id)
-        {
-            if (id == 1)
-                return Ok("Jankowski");
-            else if (id == 2)
-                return Ok("Maciejewski");
-            else if (id == 3)
-                return Ok("Andrzejewski");
-            return NotFound("Nie znaleziono studenta");
-        }
+            using (var con = new SqlConnection(ConString))
+            using (var com = new SqlCommand())
+            {
+                com.Connection = con;
+                com.CommandText = 
+                    "select IndexNumber, FirstName, LastName, BirthDate, Name, Semester from student " +
+                    "inner join Enrollment on Enrollment.IdEnrollment = Student.IdEnrollment " +
+                    "inner join Studies on Studies.IdStudy = Enrollment.IdStudy;";
 
-        [HttpGet("query")]
-        public string GetStudents(string orderBy)
-        {
-            return $"Kowalski, Malewski, Andrzejewski \nSortowanie={orderBy}";
+                con.Open();
+                var dr = com.ExecuteReader();
+                while (dr.Read())
+                {
+                   list.Add(new Student
+                    {
+                        IndexNumber = dr["IndexNumber"].ToString(),
+                        FirstName = dr["FirstName"].ToString(),
+                        LastName = dr["LastName"].ToString(),
+                        BirthDate = Convert.ToDateTime(dr["BirthDate"]),
+                        StudiesName = dr["Name"].ToString(),
+                        Enrollment = dr["Semester"].ToString()
+                    });
+                }
+            }
+            return Ok(list);
         }
-
-        [HttpPost]
-        public IActionResult CreateStudent(Student student)
-        {
-            student.IndexNumber = $"s{new Random().Next(1, 20000)}";
-            return Ok(student);
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult UpdateStudent(int id)
-        {
-            return Ok("Aktualizacja dokończona");
-        }
-
-        [HttpDelete("{id}")]
-        public IActionResult DeleteStudent(int id)
-        {
-            return Ok("Usuwanie ukończone");
-        }
-
     }
 }

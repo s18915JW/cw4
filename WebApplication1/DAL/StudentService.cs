@@ -6,8 +6,11 @@ using WebApplication1.Models;
 
 namespace WebApplication1.DAL
 {
-    public interface IDbService
+    public class StudentService : IStudentService
     {
-        public IEnumerable<Student> GetStudents();
+        public IEnumerable<Student> GetStudents()
+        {
+            return null;
+        }
     }
 }
