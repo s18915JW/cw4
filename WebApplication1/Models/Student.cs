@@ -11,8 +11,7 @@ namespace WebApplication1.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public DateTime BirthDate { get; set; }
-        // StudiesName i Enrollment -> pkt 4.2.3 złączenie tabel
         public string StudiesName { get; set; }
-        public string Enrollment { get; set; }
+        public int Semester { get; set; }
     }
 }
